@@ -98,7 +98,8 @@ charactersMap.forEach((row, i) => {
             hold: 60
           },
           scale: 3,
-          dialogue: ['My bones hurt.']
+          dialogue: ['My bones hurt.'],
+          initiatesBattle: true
         })
       )
     }
@@ -426,6 +427,37 @@ window.addEventListener('keydown', (e) => {
         player.interactionAsset.dialogueIndex = 0
         document.querySelector('#characterDialogueBox').style.display = 'none'
 
+        // start a battle (chess scene) after conversation
+        // deactivate current animation loop
+        window.cancelAnimationFrame(animationId)
+
+        audio.Map.stop()
+        audio.initBattle.play()
+        audio.battle.play()
+
+        battle.initiated = true
+        gsap.to('#overlappingDiv', {
+          opacity: 1,
+          repeat: 3,
+          yoyo: true,
+          duration: 0.4,
+          onComplete() {
+            gsap.to('#overlappingDiv', {
+              opacity: 1,
+              duration: 0.4,
+              onComplete() {
+                // activate a new animation loop (chess)
+                initBattle()
+                animateBattle()
+                gsap.to('#overlappingDiv', {
+                  opacity: 0,
+                  duration: 0.4
+                })
+              }
+            })
+          }
+        })
+
         break
     }
     return
@@ -486,3 +518,55 @@ addEventListener('click', () => {
     clicked = true
   }
 })
+
+// Mobile control mapping: map on-screen buttons to existing input handling.
+function synthKeyDown(key) {
+  // dispatch a keyboard event so existing handlers react (e.g., space for interaction)
+  window.dispatchEvent(new KeyboardEvent('keydown', { key }))
+}
+function synthKeyUp(key) {
+  window.dispatchEvent(new KeyboardEvent('keyup', { key }))
+}
+
+function bindButton(buttonId, onDown, onUp) {
+  const btn = document.getElementById(buttonId)
+  if (!btn) return
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    onDown()
+  })
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    onDown()
+  })
+  const end = (e) => {
+    e && e.preventDefault()
+    onUp()
+  }
+  btn.addEventListener('touchend', end)
+  btn.addEventListener('touchcancel', end)
+  btn.addEventListener('mouseup', end)
+  btn.addEventListener('mouseleave', end)
+}
+
+// D-pad
+bindButton('btn-up', () => (keys.w.pressed = true), () => (keys.w.pressed = false))
+bindButton('btn-left', () => (keys.a.pressed = true), () => (keys.a.pressed = false))
+bindButton('btn-down', () => (keys.s.pressed = true), () => (keys.s.pressed = false))
+bindButton('btn-right', () => (keys.d.pressed = true), () => (keys.d.pressed = false))
+
+// Action buttons: map A -> space (interact). Others dispatch custom key events for future hooks.
+bindButton('btn-A', () => synthKeyDown(' '), () => synthKeyUp(' '))
+bindButton('btn-B', () => synthKeyDown('b'), () => synthKeyUp('b'))
+bindButton('btn-X', () => synthKeyDown('x'), () => synthKeyUp('x'))
+bindButton('btn-Y', () => synthKeyDown('y'), () => synthKeyUp('y'))
+
+// When showing mobile controls on smaller screens, ensure pointer events are active.
+function updateMobileControlsVisibility() {
+  const mc = document.getElementById('mobileControls')
+  if (!mc) return
+  const show = window.innerWidth <= 900 || window.matchMedia('(orientation: portrait)').matches
+  mc.style.display = show ? 'flex' : 'none'
+}
+window.addEventListener('resize', updateMobileControlsVisibility)
+updateMobileControlsVisibility()

@@ -28,6 +28,77 @@
     button:hover {
       background-color: #ddd;
     }
+    /* Mobile controls */
+    #mobileControls {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 8px;
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 12px;
+      pointer-events: none; /* inner buttons manage pointer-events */
+      z-index: 20;
+    }
+    #mobileControls .controlGroup {
+      pointer-events: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .dpad {
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,0.06);
+      border: 3px solid black;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 6px;
+      border-radius: 12px;
+    }
+    .dpad button {
+      background: rgba(255,255,255,0.9);
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 64px);
+      gap: 8px;
+    }
+    .action-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 3px solid black;
+    }
+
+    /* Hide mobile controls on desktop by default; show when narrow */
+    #mobileControls { display: none }
+    @media (max-width: 900px), (orientation: portrait) {
+      /* scale canvas for portrait/mobile layout */
+      canvas {
+        width: calc(100vw);
+        height: calc((100vw) * 9 / 16); /* keep 16:9 aspect but fit width */
+        transform-origin: top center;
+        /* slight zoom to feel portrait-like */
+        transform: scale(1.05);
+        display: block;
+      }
+      #mobileControls { display: flex }
+    }
   </style>
 </head>
 
@@ -48,6 +119,31 @@
   ></div>
 
   <canvas></canvas>
+  <!-- Mobile on-screen controls (D-pad + ABXY) -->
+  <div id="mobileControls" aria-hidden="false">
+    <div class="controlGroup">
+      <div class="dpad" id="dpad">
+        <button id="dpad-1" style="visibility:hidden"></button>
+        <button id="btn-up">↑</button>
+        <button id="dpad-3" style="visibility:hidden"></button>
+        <button id="btn-left">←</button>
+        <button id="dpad-center" style="visibility:hidden"></button>
+        <button id="btn-right">→</button>
+        <button id="dpad-7" style="visibility:hidden"></button>
+        <button id="btn-down">↓</button>
+        <button id="dpad-9" style="visibility:hidden"></button>
+      </div>
+    </div>
+
+    <div class="controlGroup">
+      <div class="actions" id="actions">
+        <div class="action-btn" id="btn-Y">Y</div>
+        <div class="action-btn" id="btn-X">X</div>
+        <div class="action-btn" id="btn-A">A</div>
+        <div class="action-btn" id="btn-B">B</div>
+      </div>
+    </div>
+  </div>
   <div
     id="characterDialogueBox"
     style="
