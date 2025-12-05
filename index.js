@@ -600,11 +600,11 @@ function bindButton(buttonId, onDown, onUp) {
 
 // Initialize mobile controls after DOM is ready
 function initMobileControls() {
-  // D-pad - directly set the keys object
-  bindButton('btn-up', () => { keys.w.pressed = true }, () => { keys.w.pressed = false })
-  bindButton('btn-left', () => { keys.a.pressed = true }, () => { keys.a.pressed = false })
-  bindButton('btn-down', () => { keys.s.pressed = true }, () => { keys.s.pressed = false })
-  bindButton('btn-right', () => { keys.d.pressed = true }, () => { keys.d.pressed = false })
+  // D-pad - directly set the keys object and lastKey
+  bindButton('btn-up', () => { keys.w.pressed = true; lastKey = 'w' }, () => { keys.w.pressed = false })
+  bindButton('btn-left', () => { keys.a.pressed = true; lastKey = 'a' }, () => { keys.a.pressed = false })
+  bindButton('btn-down', () => { keys.s.pressed = true; lastKey = 's' }, () => { keys.s.pressed = false })
+  bindButton('btn-right', () => { keys.d.pressed = true; lastKey = 'd' }, () => { keys.d.pressed = false })
 
   // Action buttons: map A -> space (interact). Others dispatch custom key events for future hooks.
   bindButton('btn-A', () => synthKeyDown(' '), () => synthKeyUp(' '))
