@@ -54,22 +54,26 @@
       justify-content: center;
     }
     .dpad {
-      width: 140px;
-      height: 140px;
-      background: rgba(255,255,255,0.06);
-      border: 3px solid black;
+      width: 180px;
+      height: 180px;
+      background: rgba(255,255,255,0.15);
+      border: 4px solid black;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      padding: 6px;
-      border-radius: 12px;
+      padding: 8px;
+      border-radius: 16px;
+      pointer-events: auto;
     }
     .dpad button {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       width: 100%;
       height: 100%;
-      border-radius: 6px;
-      font-size: 12px;
+      border-radius: 8px;
+      font-size: 18px;
+      border: 2px solid #333;
+      pointer-events: auto;
+      touch-action: manipulation;
     }
     .actions {
       display: grid;
@@ -86,6 +90,9 @@
       justify-content: center;
       font-size: 14px;
       border: 3px solid black;
+      pointer-events: auto;
+      touch-action: manipulation;
+      cursor: pointer;
     }
 
     /* Hide mobile controls on desktop by default; show when narrow */
@@ -111,8 +118,9 @@
         margin-bottom: calc(env(safe-area-inset-bottom) + 6px);
       }
       #mobileControls .controlGroup { transform: translateY(0); }
-      .dpad { width: 120px; height: 120px }
-      .action-btn { width: 68px; height: 68px; font-size: 16px }
+      .dpad { width: 160px; height: 160px }
+      .dpad button { font-size: 20px }
+      .action-btn { width: 72px; height: 72px; font-size: 18px }
     }
   </style>
 </head>

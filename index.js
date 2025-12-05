@@ -1,7 +1,8 @@
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
-canvas.width = 1024
+// Square canvas for better mobile portrait display
+canvas.width = 576
 canvas.height = 576
 
 const collisionsMap = []
