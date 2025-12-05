@@ -204,8 +204,10 @@ const battle = {
   initiated: false
 }
 
+let animationId = null
+
 function animate() {
-  const animationId = window.requestAnimationFrame(animate)
+  animationId = window.requestAnimationFrame(animate)
   renderables.forEach((renderable) => {
     renderable.draw()
   })
@@ -406,7 +408,7 @@ function animate() {
       })
   }
 }
-// animate()
+animate()
 
 let lastKey = ''
 window.addEventListener('keydown', (e) => {
@@ -426,15 +428,50 @@ window.addEventListener('keydown', (e) => {
         player.isInteracting = false
         player.interactionAsset.dialogueIndex = 0
         document.querySelector('#characterDialogueBox').style.display = 'none'
+        // start a battle (chess scene) after conversation only if this NPC initiates battles
+        if (player.interactionAsset && player.interactionAsset.initiatesBattle) {
+          const prompt = document.getElementById('startBattlePrompt')
+          if (prompt) {
+            prompt.style.display = 'block'
+          } else {
+            // fallback to immediate start if prompt not found
+            try { window.cancelAnimationFrame(animationId) } catch (e) {}
+            audio.Map.stop()
+            audio.initBattle.play()
+            audio.battle.play()
+            battle.initiated = true
+            gsap.to('#overlappingDiv', {
+              opacity: 1,
+              repeat: 3,
+              yoyo: true,
+              duration: 0.4,
+              onComplete() {
+                gsap.to('#overlappingDiv', {
+                  opacity: 1,
+                  duration: 0.4,
+                  onComplete() {
+                    initBattle()
+                    animateBattle()
+                    gsap.to('#overlappingDiv', { opacity: 0, duration: 0.4 })
+                  }
+                })
+              }
+            })
+          }
+        }
 
-        // start a battle (chess scene) after conversation
-        // deactivate current animation loop
-        window.cancelAnimationFrame(animationId)
+        break
+      case 'x':
+      case 'X':
+        // pressing X during conversation immediately starts a battle
+        player.isInteracting = false
+        player.interactionAsset.dialogueIndex = 0
+        document.querySelector('#characterDialogueBox').style.display = 'none'
 
+        try { window.cancelAnimationFrame(animationId) } catch (err) {}
         audio.Map.stop()
         audio.initBattle.play()
         audio.battle.play()
-
         battle.initiated = true
         gsap.to('#overlappingDiv', {
           opacity: 1,
@@ -446,18 +483,13 @@ window.addEventListener('keydown', (e) => {
               opacity: 1,
               duration: 0.4,
               onComplete() {
-                // activate a new animation loop (chess)
                 initBattle()
                 animateBattle()
-                gsap.to('#overlappingDiv', {
-                  opacity: 0,
-                  duration: 0.4
-                })
+                gsap.to('#overlappingDiv', { opacity: 0, duration: 0.4 })
               }
             })
           }
         })
-
         break
     }
     return
@@ -532,15 +564,15 @@ function bindButton(buttonId, onDown, onUp) {
   const btn = document.getElementById(buttonId)
   if (!btn) return
   btn.addEventListener('touchstart', (e) => {
-    e.preventDefault()
+    if (e && e.cancelable) e.preventDefault()
     onDown()
   })
   btn.addEventListener('mousedown', (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
     onDown()
   })
   const end = (e) => {
-    e && e.preventDefault()
+    if (e && e.cancelable) e.preventDefault()
     onUp()
   }
   btn.addEventListener('touchend', end)
@@ -570,3 +602,58 @@ function updateMobileControlsVisibility() {
 }
 window.addEventListener('resize', updateMobileControlsVisibility)
 updateMobileControlsVisibility()
+
+// Start-battle prompt handlers
+function startBattleConfirmed() {
+  const prompt = document.getElementById('startBattlePrompt')
+  if (prompt) prompt.style.display = 'none'
+
+  try {
+    window.cancelAnimationFrame(animationId)
+  } catch (e) {}
+
+  audio.Map.stop()
+  audio.initBattle.play()
+  audio.battle.play()
+
+  battle.initiated = true
+  gsap.to('#overlappingDiv', {
+    opacity: 1,
+    repeat: 3,
+    yoyo: true,
+    duration: 0.4,
+    onComplete() {
+      gsap.to('#overlappingDiv', {
+        opacity: 1,
+        duration: 0.4,
+        onComplete() {
+          // activate a new animation loop (chess)
+          initBattle()
+          animateBattle()
+          gsap.to('#overlappingDiv', {
+            opacity: 0,
+            duration: 0.4
+          })
+        }
+      })
+    }
+  })
+}
+
+function startBattleCanceled() {
+  const prompt = document.getElementById('startBattlePrompt')
+  if (prompt) prompt.style.display = 'none'
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const yes = document.getElementById('startBattleYes')
+  const no = document.getElementById('startBattleNo')
+  if (yes) {
+    yes.addEventListener('click', startBattleConfirmed)
+    yes.addEventListener('touchstart', (e) => { if (e && e.cancelable) e.preventDefault(); startBattleConfirmed() })
+  }
+  if (no) {
+    no.addEventListener('click', startBattleCanceled)
+    no.addEventListener('touchstart', (e) => { if (e && e.cancelable) e.preventDefault(); startBattleCanceled() })
+  }
+})

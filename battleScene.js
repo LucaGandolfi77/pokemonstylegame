@@ -1,17 +1,17 @@
 // Simple chessboard scene: click to select a piece, move it with WASD
 // This replaces the previous Pokemon battle scene.
 
-const canvas = document.querySelector('canvas')
-const c = canvas.getContext('2d')
+const battleCanvas = document.querySelector('canvas')
+const bc = battleCanvas.getContext('2d')
 
 let chessAnimationId = null
 let chessActive = false
 
 const tileCount = 8
-const tileSize = Math.floor(Math.min(canvas.width, canvas.height) / tileCount)
+const tileSize = Math.floor(Math.min(battleCanvas.width, battleCanvas.height) / tileCount)
 const boardWidth = tileSize * tileCount
-const xOffset = Math.floor((canvas.width - boardWidth) / 2)
-const yOffset = Math.floor((canvas.height - boardWidth) / 2)
+const xOffset = Math.floor((battleCanvas.width - boardWidth) / 2)
+const yOffset = Math.floor((battleCanvas.height - boardWidth) / 2)
 
 // Unicode chess pieces for rendering
 const pieces = {
@@ -107,37 +107,37 @@ function screenToBoard(x, y) {
 
 function drawBoard() {
   // background
-  c.fillStyle = '#222'
-  c.fillRect(0, 0, canvas.width, canvas.height)
+  bc.fillStyle = '#222'
+  bc.fillRect(0, 0, battleCanvas.width, battleCanvas.height)
 
   for (let r = 0; r < tileCount; r++) {
     for (let cCol = 0; cCol < tileCount; cCol++) {
       const { x, y } = boardToScreen(r, cCol)
       const isLight = (r + cCol) % 2 === 0
-      c.fillStyle = isLight ? '#f0d9b5' : '#b58863'
-      c.fillRect(x, y, tileSize, tileSize)
+      bc.fillStyle = isLight ? '#f0d9b5' : '#b58863'
+      bc.fillRect(x, y, tileSize, tileSize)
       // highlight selected
       if (selected && selected.r === r && selected.c === cCol) {
-        c.fillStyle = 'rgba(0, 255, 0, 0.25)'
-        c.fillRect(x, y, tileSize, tileSize)
+        bc.fillStyle = 'rgba(0, 255, 0, 0.25)'
+        bc.fillRect(x, y, tileSize, tileSize)
       }
     }
   }
 
   // draw coordinates (optional)
-  c.fillStyle = 'rgba(0,0,0,0.6)'
-  c.font = `${Math.max(12, Math.floor(tileSize * 0.14))}px monospace`
+  bc.fillStyle = 'rgba(0,0,0,0.6)'
+  bc.font = `${Math.max(12, Math.floor(tileSize * 0.14))}px monospace`
   for (let i = 0; i < tileCount; i++) {
     // files (a-h) at bottom
     const file = String.fromCharCode('a'.charCodeAt(0) + i)
     const pos = boardToScreen(tileCount - 1, i)
-    c.fillText(file, pos.x + 4, pos.y + tileSize - 6)
+    bc.fillText(file, pos.x + 4, pos.y + tileSize - 6)
   }
 
   // draw pieces
-  c.textAlign = 'center'
-  c.textBaseline = 'middle'
-  c.font = `${Math.floor(tileSize * 0.65)}px serif`
+  bc.textAlign = 'center'
+  bc.textBaseline = 'middle'
+  bc.font = `${Math.floor(tileSize * 0.65)}px serif`
   for (let r = 0; r < tileCount; r++) {
     for (let cCol = 0; cCol < tileCount; cCol++) {
       const code = board[r][cCol]
@@ -148,14 +148,14 @@ function drawBoard() {
       const centerY = y + tileSize / 2
       // color glyph slightly differently for white vs black pieces
       if (code[0] === 'w') {
-        c.fillStyle = '#fff'
-        c.strokeStyle = '#000'
-        c.lineWidth = Math.max(1, Math.floor(tileSize * 0.03))
-        c.strokeText(glyph, centerX, centerY + 2)
-        c.fillText(glyph, centerX, centerY + 2)
+        bc.fillStyle = '#fff'
+        bc.strokeStyle = '#000'
+        bc.lineWidth = Math.max(1, Math.floor(tileSize * 0.03))
+        bc.strokeText(glyph, centerX, centerY + 2)
+        bc.fillText(glyph, centerX, centerY + 2)
       } else {
-        c.fillStyle = '#000'
-        c.fillText(glyph, centerX, centerY + 2)
+        bc.fillStyle = '#000'
+        bc.fillText(glyph, centerX, centerY + 2)
       }
     }
   }
@@ -165,32 +165,32 @@ function drawBoard() {
     const legal = getLegalMoves(selected.r, selected.c)
     legal.forEach((m) => {
       const { x, y } = boardToScreen(m.r, m.c)
-      if (board[m.r][m.c] && board[m.r][m.c][0] !== board[selected.r][selected.c][0]) {
+        if (board[m.r][m.c] && board[m.r][m.c][0] !== board[selected.r][selected.c][0]) {
         // capture move
-        c.fillStyle = 'rgba(255,0,0,0.35)'
+        bc.fillStyle = 'rgba(255,0,0,0.35)'
       } else {
-        c.fillStyle = 'rgba(0,255,0,0.25)'
+        bc.fillStyle = 'rgba(0,255,0,0.25)'
       }
-      c.fillRect(x, y, tileSize, tileSize)
+      bc.fillRect(x, y, tileSize, tileSize)
     })
   }
 
   // draw status message if present
   if (statusMessage && Date.now() - statusTimestamp < statusTTL) {
-    c.textAlign = 'center'
-    c.fillStyle = 'rgba(0,0,0,0.7)'
-    c.fillRect(canvas.width / 2 - 220, 8, 440, 28)
-    c.fillStyle = 'white'
-    c.font = '16px monospace'
-    c.fillText(statusMessage, canvas.width / 2, 28)
+    bc.textAlign = 'center'
+    bc.fillStyle = 'rgba(0,0,0,0.7)'
+    bc.fillRect(battleCanvas.width / 2 - 220, 8, 440, 28)
+    bc.fillStyle = 'white'
+    bc.font = '16px monospace'
+    bc.fillText(statusMessage, battleCanvas.width / 2, 28)
   }
 
   // instructions
   const info = 'Click piece to select. Move selected piece with W A S D.'
-  c.fillStyle = 'white'
-  c.font = '14px monospace'
-  c.textAlign = 'left'
-  c.fillText(info, 10, 20)
+  bc.fillStyle = 'white'
+  bc.font = '14px monospace'
+  bc.textAlign = 'left'
+  bc.fillText(info, 10, 20)
 }
 
 function animateChess() {
@@ -511,17 +511,42 @@ function animateBattle() {
   initBattle()
 }
 
-// Mouse selection
-canvas.addEventListener('click', (e) => {
+// Helper to get board coordinates from screen/touch position (handles CSS scaling)
+function getCanvasCoords(e) {
+  const rect = battleCanvas.getBoundingClientRect()
+  let clientX, clientY
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX
+    clientY = e.touches[0].clientY
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX
+    clientY = e.changedTouches[0].clientY
+  } else {
+    clientX = e.clientX
+    clientY = e.clientY
+  }
+  // Account for CSS scaling: map from displayed size to internal canvas size
+  const scaleX = battleCanvas.width / rect.width
+  const scaleY = battleCanvas.height / rect.height
+  const x = (clientX - rect.left) * scaleX
+  const y = (clientY - rect.top) * scaleY
+  return { x, y }
+}
+
+// Unified handler for both click and touch
+function handleBoardInput(e) {
   if (!chessActive) return
   if (promotionPending) return
-  const rect = canvas.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  const bc = screenToBoard(x, y)
-  if (!bc) return
-  const { r, c } = bc
+  
+  // Prevent default to avoid double-firing and scrolling
+  if (e.cancelable) e.preventDefault()
+  
+  const { x, y } = getCanvasCoords(e)
+  const boardCoord = screenToBoard(x, y)
+  if (!boardCoord) return
+  const { r, c } = boardCoord
   const clicked = board[r][c]
+  
   if (selected) {
     const legal = getLegalMoves(selected.r, selected.c)
     const mv = legal.find((m) => m.r === r && m.c === c)
@@ -544,7 +569,13 @@ canvas.addEventListener('click', (e) => {
     // only allow selecting your side's pieces
     if (clicked && clicked[0] === sideToMove) selected = { r, c }
   }
-})
+}
+
+// Mouse selection
+battleCanvas.addEventListener('click', handleBoardInput)
+
+// Touch support for mobile
+battleCanvas.addEventListener('touchend', handleBoardInput)
 
 // WASD movement for the selected piece
 window.addEventListener('keydown', (e) => {
@@ -576,7 +607,7 @@ window.addEventListener('keydown', (e) => {
     chessActive = false
     if (chessAnimationId) cancelAnimationFrame(chessAnimationId)
     // clear board area
-    c.clearRect(0, 0, canvas.width, canvas.height)
+    bc.clearRect(0, 0, battleCanvas.width, battleCanvas.height)
   }
 })
 
@@ -731,7 +762,7 @@ window.animateBattle = animateBattle
 
 // --- UI: move history panel and controls ---
 function ensureControls() {
-  const wrapper = document.querySelector('canvas').parentElement
+  const wrapper = battleCanvas.parentElement
   if (document.querySelector('#chessControls')) return
 
   const panel = document.createElement('div')
@@ -872,7 +903,7 @@ function aiMakeMove() {
 }
 // Promotion chooser UI (styled to match pixel font in index.html)
 function showPromotionChooser(color, to, cb) {
-  const wrapper = document.querySelector('canvas').parentElement
+  const wrapper = battleCanvas.parentElement
   const modal = document.createElement('div')
   modal.id = 'promotionModal'
   modal.style.position = 'absolute'
