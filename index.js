@@ -563,36 +563,63 @@ function synthKeyUp(key) {
 
 function bindButton(buttonId, onDown, onUp) {
   const btn = document.getElementById(buttonId)
-  if (!btn) return
-  btn.addEventListener('touchstart', (e) => {
-    if (e && e.cancelable) e.preventDefault()
-    onDown()
-  })
-  btn.addEventListener('mousedown', (e) => {
-    if (e && e.preventDefault) e.preventDefault()
-    onDown()
-  })
-  const end = (e) => {
-    if (e && e.cancelable) e.preventDefault()
-    onUp()
+  if (!btn) {
+    console.warn('Button not found:', buttonId)
+    return
   }
-  btn.addEventListener('touchend', end)
-  btn.addEventListener('touchcancel', end)
-  btn.addEventListener('mouseup', end)
-  btn.addEventListener('mouseleave', end)
+  // Use { passive: false } to allow preventDefault on touch events
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onDown()
+  }, { passive: false })
+  
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault()
+    onDown()
+  })
+  
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onUp()
+  }, { passive: false })
+  
+  btn.addEventListener('touchcancel', (e) => {
+    onUp()
+  })
+  
+  btn.addEventListener('mouseup', (e) => {
+    onUp()
+  })
+  
+  btn.addEventListener('mouseleave', (e) => {
+    onUp()
+  })
 }
 
-// D-pad
-bindButton('btn-up', () => (keys.w.pressed = true), () => (keys.w.pressed = false))
-bindButton('btn-left', () => (keys.a.pressed = true), () => (keys.a.pressed = false))
-bindButton('btn-down', () => (keys.s.pressed = true), () => (keys.s.pressed = false))
-bindButton('btn-right', () => (keys.d.pressed = true), () => (keys.d.pressed = false))
+// Initialize mobile controls after DOM is ready
+function initMobileControls() {
+  // D-pad - directly set the keys object
+  bindButton('btn-up', () => { keys.w.pressed = true }, () => { keys.w.pressed = false })
+  bindButton('btn-left', () => { keys.a.pressed = true }, () => { keys.a.pressed = false })
+  bindButton('btn-down', () => { keys.s.pressed = true }, () => { keys.s.pressed = false })
+  bindButton('btn-right', () => { keys.d.pressed = true }, () => { keys.d.pressed = false })
 
-// Action buttons: map A -> space (interact). Others dispatch custom key events for future hooks.
-bindButton('btn-A', () => synthKeyDown(' '), () => synthKeyUp(' '))
-bindButton('btn-B', () => synthKeyDown('b'), () => synthKeyUp('b'))
-bindButton('btn-X', () => synthKeyDown('x'), () => synthKeyUp('x'))
-bindButton('btn-Y', () => synthKeyDown('y'), () => synthKeyUp('y'))
+  // Action buttons: map A -> space (interact). Others dispatch custom key events for future hooks.
+  bindButton('btn-A', () => synthKeyDown(' '), () => synthKeyUp(' '))
+  bindButton('btn-B', () => synthKeyDown('b'), () => synthKeyUp('b'))
+  bindButton('btn-X', () => synthKeyDown('x'), () => synthKeyUp('x'))
+  bindButton('btn-Y', () => synthKeyDown('y'), () => synthKeyUp('y'))
+}
+
+// Call immediately since scripts are at bottom of HTML (DOM should be ready)
+initMobileControls()
+
+// Also try again on DOMContentLoaded in case timing is off
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMobileControls)
+}
 
 // When showing mobile controls on smaller screens, ensure pointer events are active.
 function updateMobileControlsVisibility() {
